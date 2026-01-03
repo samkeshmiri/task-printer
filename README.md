@@ -6,7 +6,9 @@ A receipt printer app for printing and tracking tasks. Print individual tasks or
 
 - 📋 Hierarchical task management (tasks with unlimited subtasks)
 - 🖨️ Print individual tasks in large text
-- 📝 Print entire task lists with subtasks
+- 📝 Print entire task lists - each subtask as its own tearable section
+- ✂️ Auto text-wrapping for long task names (fits 80mm receipt paper)
+- 🔌 Persistent printer connection - print multiple tasks without reconnecting
 - 💾 In-memory SQLite database (easily upgradeable to persistent storage)
 - 🎨 Clean, modern UI
 - 🌳 Visual task tree representation
@@ -37,8 +39,18 @@ A receipt printer app for printing and tracking tasks. Print individual tasks or
 ### Printing
 
 When you click on a task, you have two options:
-1. **Print This Task Only** - Prints just the task name in large text (perfect for pinning to a board)
-2. **Print With All Subtasks** - Prints the main task and all its subtasks (great for comprehensive lists)
+
+1. **Print This Task Only** - Prints just the task name in large, bold text centered on the receipt. Perfect for a single tearable piece to pin on your board or put in your progress jar.
+
+2. **Print With All Subtasks** - Prints each task as its own separate section with a cut between them:
+   - Main task printed in large text → cut
+   - Each subtask printed in large text → cut
+   - Result: Multiple tearable pieces, one for each subtask
+   
+**Features:**
+- Text automatically wraps if task names are too long (max 16 characters per line in large text)
+- Printer stays connected between prints - no need to reconnect
+- Each printed section can be torn off individually
 
 ### Connecting Your Munbyn ITPP047 Printer
 
@@ -46,19 +58,22 @@ The app is configured for the **Munbyn ITPP047** thermal receipt printer. To con
 
 1. **Connect your printer via USB** and power it on
 
-2. **Find your printer's USB IDs** (if the default doesn't work):
+2. **Find your printer's USB IDs**:
    ```bash
    ./find-printer.sh
    ```
    Or manually:
    ```bash
-   system_profiler SPUSBDataType | grep -B 3 -A 10 -i "munbyn"
+   system_profiler SPUSBDataType | grep -B 3 -A 10 -i "printer"
    ```
+   Look for:
+   - `USB Vendor ID: 0x0483` (or similar)
+   - `USB Product ID: 0x5743` (or similar)
 
-3. **Update printer IDs if needed** in `server/printer/printer.js`:
+3. **Update printer IDs if needed** in [server/printer/printer.js](server/printer/printer.js):
    ```javascript
-   const vendorId = 0x0DD4;  // Your vendor ID
-   const productId = 0x0006; // Your product ID
+   const vendorId = 0x0483;  // Your vendor ID
+   const productId = 0x5743; // Your product ID
    ```
 
 4. **Restart the server:**
@@ -66,13 +81,20 @@ The app is configured for the **Munbyn ITPP047** thermal receipt printer. To con
    npm start
    ```
 
-The server will automatically attempt to connect to the printer on startup. If it fails, the app continues in mock mode (console output only).
+The server will automatically attempt to connect to the printer on startup. If successful, you'll see:
+```
+✓ Printer connected successfully!
+```
+
+If it fails, the app continues in mock mode (console output only) so you can still test the functionality.
 
 ## Technologies Used
 
 - **Backend:** Node.js + Express
-- **Database:** SQLite (better-sqlite3)
-- **Printer:** Munbyn ITPP047 - ESC/POS protocol
+- **Database:** SQLite (better-sqlite3) - in-memory
+- **Printer:** Munbyn ITPP047 (80mm thermal receipt printer)
+- **Printer Protocol:** ESC/POS via USB
+- **USB Communication:** node-usb library
 - **Frontend:** Vanilla JavaScript, HTML5, CSS3
 
 ## Project Structure
@@ -107,9 +129,13 @@ task-printer/
 
 ## Receipt Printer Specifications
 
-- Paper width: 80mm (79.5±0.5mm)
-- Print speed: 200mm/sec
-- Format: ESC/POS protocol
+- **Model:** Munbyn ITPP047
+- **Paper width:** 80mm (79.5±0.5mm)
+- **Print speed:** 200mm/sec
+- **Protocol:** ESC/POS
+- **Connection:** USB
+- **Text capacity:** 16 characters per line in double-width mode (large text)
+- **Auto-wrapping:** Yes - long task names automatically wrap to multiple lines
 
 ## Future Enhancements
 

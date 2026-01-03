@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Printer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📋 Task Printer</h1>
+      <p>Manage and print your tasks</p>
+    </header>
+
+    <main>
+      <!-- Add Task Section -->
+      <section class="add-task-section">
+        <h2>Add New Task</h2>
+        <div class="add-task-form">
+          <input 
+            type="text" 
+            id="taskNameInput" 
+            placeholder="Enter task name..." 
+            autocomplete="off"
+          >
+          <select id="parentTaskSelect">
+            <option value="">No Parent (Root Task)</option>
+          </select>
+          <button id="addTaskBtn" class="btn btn-primary">Add Task</button>
+        </div>
+      </section>
+
+      <!-- Task Tree Section -->
+      <section class="task-tree-section">
+        <h2>Your Tasks</h2>
+        <div id="taskTree" class="task-tree"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal for task details -->
+  <div id="taskModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 id="modalTaskName"></h2>
+      <div class="modal-actions">
+        <button id="printSingleBtn" class="btn btn-success">🖨️ Print This Task Only</button>
+        <button id="printWithSubtasksBtn" class="btn btn-success">🖨️ Print With All Subtasks</button>
+        <button id="deleteTaskBtn" class="btn btn-danger">🗑️ Delete Task</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -8,7 +8,7 @@ class USBAdapter {
   constructor(vendorId, productId) {
     const device = usb.findByIds(vendorId, productId);
     if (!device) {
-      throw new Error('USB device not found');
+      throw new Error("USB device not found");
     }
     this.device = device;
   }
@@ -30,14 +30,14 @@ class USBAdapter {
         iface.detachKernelDriver();
       }
       iface.claim();
-      
-      const endpoint = iface.endpoints.find(e => e.direction === 'out');
+
+      const endpoint = iface.endpoints.find((e) => e.direction === "out");
       if (!endpoint) {
-        const error = new Error('No output endpoint found');
+        const error = new Error("No output endpoint found");
         if (callback) return callback(error);
         throw error;
       }
-      
+
       endpoint.transfer(data, callback);
     } catch (error) {
       if (callback) callback(error);
@@ -66,17 +66,11 @@ class PrinterService {
   /**
    * Initialize printer connection for Munbyn ITPP047
    *
-   * To find your printer's vendor/product ID if these don't work:
-   * 1. Connect your printer via USB
-   * 2. Run: system_profiler SPUSBDataType (macOS)
-   * 3. Look for "Munbyn" or "Printer" device
-   * 4. Update the IDs below
    */
   async connect() {
     try {
-      // Munbyn ITPP047 - Actual USB IDs from your device
-      const vendorId = 0x0483; // Your printer's vendor ID
-      const productId = 0x5743; // Your printer's product ID
+      const vendorId = 0x0483;
+      const productId = 0x5743;
 
       console.log(
         `Attempting to connect to Munbyn ITPP047 (Vendor: 0x${vendorId.toString(
@@ -93,17 +87,9 @@ class PrinterService {
       this.printer = new escpos.Printer(device);
 
       console.log("✓ Printer connected successfully!");
-      console.log("Printer instance created:", this.printer ? "YES" : "NO");
       return true;
     } catch (error) {
       console.error("Failed to connect to printer:", error.message);
-      console.log("\nTroubleshooting:");
-      console.log("1. Make sure the printer is connected via USB");
-      console.log("2. Check printer is powered on");
-      console.log(
-        '3. Run: system_profiler SPUSBDataType | grep -A 10 -i "printer\\|munbyn"'
-      );
-      console.log("4. Update vendor/product IDs in printer.js if needed");
       throw error;
     }
   }
@@ -113,11 +99,7 @@ class PrinterService {
    * @param {string} taskName - The name of the task to print
    */
   async printTask(taskName) {
-    // Mock printing to console
-    const formattedTask = this._formatTaskForPrint(taskName);
-    console.log(formattedTask);
-    console.log("------------------------");
-    console.log("=== CUT HERE ===\n");
+    console.log(taskName);
 
     // Actual printer output
     if (this.printer) {
@@ -125,18 +107,14 @@ class PrinterService {
         await new Promise((resolve, _reject) => {
           // Wrap text to fit on paper (16 chars for double-width to be safe)
           const wrappedLines = this._wrapText(taskName, 16);
-          
-          this.printer
-            .font("a")
-            .align("ct")
-            .style("bu")
-            .size(2, 2);
-          
+
+          this.printer.feed(4).font("a").align("ct").style("bu").size(2, 2);
+
           // Print each line
-          wrappedLines.forEach(line => {
+          wrappedLines.forEach((line) => {
             this.printer.text(line);
           });
-          
+
           this.printer
             .feed(4)
             .cut()
@@ -166,17 +144,11 @@ class PrinterService {
     // Print main task
     console.log("MAIN TASK:");
     console.log(this._formatTaskForPrint(mainTask.name));
-    console.log("------------------------");
-    console.log("=== CUT HERE ===");
 
     // Print each subtask as its own section
     if (subtasks && subtasks.length > 0) {
       subtasks.forEach((subtask, index) => {
-        console.log("");
-        console.log(`SUBTASK ${index + 1}:`);
         console.log(this._formatTaskForPrint(subtask.name));
-        console.log("------------------------");
-        console.log("=== CUT HERE ===");
       });
     }
     console.log("");
@@ -184,36 +156,28 @@ class PrinterService {
     // Actual printer output
     if (this.printer) {
       try {
-        await new Promise((resolve, reject) => {
+        await new Promise((resolve, _reject) => {
           // Main task in large text with cut
           const mainTaskLines = this._wrapText(mainTask.name, 16);
-          this.printer
-            .font("a")
-            .align("ct")
-            .style("bu")
-            .size(2, 2);
-          
-          mainTaskLines.forEach(line => {
+          this.printer.font("a").align("ct").style("bu").size(2, 2);
+
+          mainTaskLines.forEach((line) => {
             this.printer.text(line);
           });
-          
-          this.printer.feed(2).cut();
+
+          this.printer.feed(4).cut();
 
           // Each subtask in its own section with large text
           if (subtasks && subtasks.length > 0) {
             subtasks.forEach((subtask, index) => {
               const subtaskLines = this._wrapText(subtask.name, 16);
-              this.printer
-                .font("a")
-                .align("ct")
-                .style("bu")
-                .size(2, 2);
-              
-              subtaskLines.forEach(line => {
+              this.printer.feed(4).font("a").align("ct").style("bu").size(2, 2);
+
+              subtaskLines.forEach((line) => {
                 this.printer.text(line);
               });
-              
-              this.printer.feed(2).cut();
+
+              this.printer.feed(4).cut();
             });
           }
 

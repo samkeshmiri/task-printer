@@ -1,8 +1,7 @@
 import { Router } from "express";
-import PrinterService from "../printer/printer.js";
+import printerService from "../printer/printer.js";
 
 const router = Router();
-const printerService = PrinterService;
 
 // Print task directly
 router.post("/print", async (req, res) => {

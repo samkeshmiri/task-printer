@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Receipt printer app for printing tasks",
   "main": "server/index.js",
+  "bin": {
+    "tprint": "./tprint.js"
+  },
   "type": "module",
   "scripts": {
     "start": "node server/index.js",

@@ -1,0 +1,12 @@
+#!/bin/bash
+# Alternative tprint wrapper script for easier shell integration
+# This allows you to use it without quotes if tasks don't contain special characters
+
+# Check if any arguments provided
+if [ $# -eq 0 ]; then
+    tprint --help
+    exit 0
+fi
+
+# Pass all arguments to tprint with proper quoting
+tprint "$@"

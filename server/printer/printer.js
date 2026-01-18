@@ -144,92 +144,6 @@ class PrinterService {
   }
 
   /**
-   * Print multiple tasks (task + all subtasks)
-   * Each subtask gets its own tearable section with large text
-   * @param {Object} mainTask - The main task object
-   * @param {Array} subtasks - Array of subtask objects
-   */
-  async printTaskWithSubtasks(mainTask, subtasks) {
-    // Print main task
-    console.log("MAIN TASK:");
-    console.log(this._formatTaskForPrint(mainTask.name));
-
-    // Print each subtask as its own section
-    if (subtasks && subtasks.length > 0) {
-      subtasks.forEach((subtask, index) => {
-        console.log(this._formatTaskForPrint(subtask.name));
-      });
-    }
-    console.log("");
-
-    if (this.printer) {
-      try {
-        await new Promise((resolve, reject) => {
-          // Main task in large text with cut
-          const mainTaskLines = this._wrapText(mainTask.name, 16);
-          this.printer.font("a").align("ct").style("bu").size(2, 2);
-
-          mainTaskLines.forEach((line) => {
-            this.printer.text(line);
-          });
-
-          this.printer.feed(4).cut();
-
-          // Each subtask in its own section with large text
-          if (subtasks && subtasks.length > 0) {
-            subtasks.forEach((subtask, index) => {
-              const subtaskLines = this._wrapText(subtask.name, 16);
-              this.printer.feed(4).font("a").align("ct").style("bu").size(2, 2);
-
-              subtaskLines.forEach((line) => {
-                this.printer.text(line);
-              });
-
-              this.printer.feed(4).cut();
-            });
-          }
-
-          this.printer.flush((error) => {
-            if (error) {
-              console.error("Flush error:", error);
-              reject(error);
-            } else {
-              console.log(
-                `✓ Task list printed successfully! (${subtasks.length} subtasks, each in its own section)`,
-              );
-              resolve();
-            }
-          });
-        });
-      } catch (error) {
-        console.error("Print error:", error);
-        throw error;
-      }
-    } else {
-      console.log("(Mock mode - printer not connected)");
-    }
-
-    return {
-      success: true,
-      mainTask: mainTask.name,
-      subtaskCount: subtasks.length,
-    };
-  }
-
-  /**
-   * Format task name for printing (centered, large)
-   */
-  _formatTaskForPrint(taskName) {
-    const lines = this._wrapText(taskName, 16); // 16 chars for double-width text
-    return lines
-      .map((line) => {
-        const padding = Math.floor((16 - line.length) / 2);
-        return " ".repeat(padding) + line.toUpperCase();
-      })
-      .join("\n");
-  }
-
-  /**
    * Wrap text to fit within character limit
    */
   _wrapText(text, maxChars) {
@@ -259,14 +173,6 @@ class PrinterService {
 
     if (currentLine) lines.push(currentLine);
     return lines;
-  }
-
-  /**
-   * Get indentation for nested tasks
-   */
-  _getTaskIndent(task, allTasks) {
-    // Simple indentation - could be enhanced to show hierarchy
-    return "  ";
   }
 
   /**

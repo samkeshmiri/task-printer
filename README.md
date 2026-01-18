@@ -1,17 +1,16 @@
 # Task Printer
 
-A receipt printer app for printing and tracking tasks. Print individual tasks or entire task lists with subtasks on receipt paper to track your progress!
+A receipt printer app for printing individual tasks on receipt paper. Simple, fast task printing with large, readable text perfect for physical task tracking!
 
 ## Features
 
-- 📋 Hierarchical task management (tasks with unlimited subtasks)
-- 🖨️ Print individual tasks in large text
-- 📝 Print entire task lists - each subtask as its own tearable section
+- �️ Print individual tasks in large, bold text
 - ✂️ Auto text-wrapping for long task names (fits 80mm receipt paper)
 - 🔌 Persistent printer connection - print multiple tasks without reconnecting
-- 💾 In-memory SQLite database (easily upgradeable to persistent storage)
-- 🎨 Clean, modern UI
-- 🌳 Visual task tree representation
+- 🎨 Clean, modern web interface
+- 💻 Command line interface for quick printing
+- 🖨️ Support for Munbyn ITPP047 thermal receipt printer
+- 🔄 Mock mode when printer not available
 
 ## Setup
 
@@ -30,27 +29,30 @@ A receipt printer app for printing and tracking tasks. Print individual tasks or
 
 ## Usage
 
-### Managing Tasks
+### Web Interface
 
-- **Add a task:** Enter a task name and optionally select a parent task
-- **View tasks:** Tasks are displayed in a hierarchical tree structure
-- **Click on any task** to open the print/delete menu
+- **Enter a task name** in the input field
+- **Click Print** or press Enter to print immediately
+- Tasks are printed in large, bold text centered on the receipt
+- Perfect for creating physical task cards to track your progress
+
+### Command Line Interface
+
+For quick printing from the terminal:
+```bash
+# Print a single task
+tprint "Buy groceries"
+
+# Print multiple tasks (each as separate slips)
+tprint "Buy groceries" "Walk the dog" "Finish report"
+```
 
 ### Printing
-
-When you click on a task, you have two options:
-
-1. **Print This Task Only** - Prints just the task name in large, bold text centered on the receipt. Perfect for a single tearable piece to pin on your board or put in your progress jar.
-
-2. **Print With All Subtasks** - Prints each task as its own separate section with a cut between them:
-   - Main task printed in large text → cut
-   - Each subtask printed in large text → cut
-   - Result: Multiple tearable pieces, one for each subtask
    
 **Features:**
 - Text automatically wraps if task names are too long (max 16 characters per line in large text)
 - Printer stays connected between prints - no need to reconnect
-- Each printed section can be torn off individually
+- Each task prints as its own tearable slip
 
 ### Connecting Your Munbyn ITPP047 Printer
 
@@ -91,7 +93,7 @@ If it fails, the app continues in mock mode (console output only) so you can sti
 ## Technologies Used
 
 - **Backend:** Node.js + Express
-- **Database:** SQLite (better-sqlite3) - in-memory
+- **CLI:** Node.js with ES modules
 - **Printer:** Munbyn ITPP047 (80mm thermal receipt printer)
 - **Printer Protocol:** ESC/POS via USB
 - **USB Communication:** node-usb library
@@ -101,31 +103,26 @@ If it fails, the app continues in mock mode (console output only) so you can sti
 
 ```
 task-printer/
+├── tprint.js              # CLI script
 ├── server/
 │   ├── index.js           # Express server
-│   ├── db.js              # SQLite database setup
 │   ├── routes/
-│   │   └── tasks.js       # Task CRUD endpoints
+│   │   └── tasks.js       # Print API endpoint
 │   └── printer/
 │       └── printer.js     # Printer service
 ├── public/
 │   ├── index.html         # UI
 │   ├── styles.css         # Styling
 │   └── app.js             # Frontend JavaScript
+├── bin/
+│   └── tprint-simple      # Alternative CLI wrapper
 ├── package.json
 └── README.md
 ```
 
 ## API Endpoints
 
-- `GET /api/tasks` - Get all root tasks
-- `GET /api/tasks/:id` - Get specific task
-- `GET /api/tasks/:id/children` - Get task's children
-- `GET /api/tasks-tree` - Get complete task tree
-- `POST /api/tasks` - Create new task
-- `PUT /api/tasks/:id` - Update task
-- `DELETE /api/tasks/:id` - Delete task
-- `POST /api/print/:id` - Print task (with optional subtasks)
+- `POST /api/print` - Print a task by name
 
 ## Receipt Printer Specifications
 
@@ -139,13 +136,12 @@ task-printer/
 
 ## Future Enhancements
 
-- [ ] Persistent database (switch from in-memory to file-based)
-- [ ] Task completion tracking
-- [ ] Statistics and progress visualization
-- [ ] Task import/export
 - [ ] Multiple printer profiles
-- [ ] Custom print templates
-- [ ] Task scheduling/reminders
+- [ ] Custom print templates and fonts
+- [ ] QR code generation for digital task tracking
+- [ ] Print history and statistics
+- [ ] Batch printing from files
+- [ ] Integration with task management apps
 
 ## Development
 

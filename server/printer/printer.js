@@ -1,9 +1,6 @@
-// Munbyn ITPP047 receipt printer configuration
-
 import escpos from "escpos";
 import usb from "usb";
 
-// Custom USB adapter for ES modules compatibility
 class USBAdapter {
   constructor(vendorId, productId) {
     const device = usb.findByIds(vendorId, productId);
@@ -26,10 +23,29 @@ class USBAdapter {
   write(data, callback) {
     try {
       const iface = this.device.interfaces[0];
-      if (iface.isKernelDriverActive()) {
-        iface.detachKernelDriver();
+
+      // Try to detach kernel driver if it is actively in use by the OS, but don't fail if we can't
+      try {
+        if (iface.isKernelDriverActive()) {
+          iface.detachKernelDriver();
+        }
+      } catch (driverError) {
+        console.warn(
+          "Could not detach kernel driver-  this may be okay, continuing...:",
+          driverError.message,
+        );
       }
-      iface.claim();
+
+      // So we try to claim the interface from the OS
+      try {
+        iface.claim();
+      } catch (claimError) {
+        if (claimError.message.includes("LIBUSB_ERROR_BUSY")) {
+          console.warn("Interface already claimed, continuing...");
+        } else {
+          throw claimError;
+        }
+      }
 
       const endpoint = iface.endpoints.find((e) => e.direction === "out");
       if (!endpoint) {
@@ -65,28 +81,19 @@ class PrinterService {
 
   /**
    * Initialize printer connection for Munbyn ITPP047
-   *
    */
   async connect() {
     try {
       const vendorId = 0x0483;
       const productId = 0x5743;
 
-      console.log(
-        `Attempting to connect to Munbyn ITPP047 (Vendor: 0x${vendorId.toString(
-          16
-        )}, Product: 0x${productId.toString(16)})...`
-      );
-
-      // Create USB device using custom adapter
       const device = new USBAdapter(vendorId, productId);
       this.device = device;
       device.open();
 
-      // Create printer instance
       this.printer = new escpos.Printer(device);
 
-      console.log("✓ Printer connected successfully!");
+      console.log("Printer connected successfully!");
       return true;
     } catch (error) {
       console.error("Failed to connect to printer:", error.message);
@@ -104,13 +111,11 @@ class PrinterService {
     // Actual printer output
     if (this.printer) {
       try {
-        await new Promise((resolve, _reject) => {
-          // Wrap text to fit on paper (16 chars for double-width to be safe)
+        await new Promise((resolve, reject) => {
           const wrappedLines = this._wrapText(taskName, 16);
 
-          this.printer.feed(4).font("a").align("ct").style("bu").size(2, 2);
+          this.printer.feed(2).font("a").align("ct").style("bu").size(2, 2);
 
-          // Print each line
           wrappedLines.forEach((line) => {
             this.printer.text(line);
           });
@@ -118,9 +123,13 @@ class PrinterService {
           this.printer
             .feed(4)
             .cut()
-            .flush(() => {
-              console.log("✓ Task printed successfully!");
-              resolve();
+            .flush((error) => {
+              if (error) {
+                console.error("Flush error:", error);
+                reject(error);
+              } else {
+                resolve();
+              }
             });
         });
       } catch (error) {
@@ -153,10 +162,9 @@ class PrinterService {
     }
     console.log("");
 
-    // Actual printer output
     if (this.printer) {
       try {
-        await new Promise((resolve, _reject) => {
+        await new Promise((resolve, reject) => {
           // Main task in large text with cut
           const mainTaskLines = this._wrapText(mainTask.name, 16);
           this.printer.font("a").align("ct").style("bu").size(2, 2);
@@ -181,11 +189,16 @@ class PrinterService {
             });
           }
 
-          this.printer.flush(() => {
-            console.log(
-              `✓ Task list printed successfully! (${subtasks.length} subtasks, each in its own section)`
-            );
-            resolve();
+          this.printer.flush((error) => {
+            if (error) {
+              console.error("Flush error:", error);
+              reject(error);
+            } else {
+              console.log(
+                `✓ Task list printed successfully! (${subtasks.length} subtasks, each in its own section)`,
+              );
+              resolve();
+            }
           });
         });
       } catch (error) {
